@@ -1,0 +1,1380 @@
+<!DOCTYPE html>
+<html lang="zh-Hant">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+<meta name="theme-color" content="#C25E3F">
+<title>好人好事地圖</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Noto+Sans+TC:wght@400;500;700;900&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.min.css">
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/leaflet.markercluster/1.5.3/MarkerCluster.min.css">
+<style>
+/* ============ 基礎（長者友善：大字、高對比、大按鈕） ============ */
+:root{
+  --bg:#FBF6EE;
+  --card:#FFFFFF;
+  --ink:#33302B;
+  --muted:#6E675C;
+  --primary:#C25E3F;
+  --primary-dark:#A84B2F;
+  --primary-soft:#F7E4DC;
+  --accent:#4A7B6F;
+  --accent-soft:#E2EEEA;
+  --gold:#E3A83B;
+  --line:#E7DECF;
+  --danger:#B3402E;
+  --radius:16px;
+  --shadow:0 4px 16px rgba(80,60,40,.12);
+}
+*{box-sizing:border-box;-webkit-tap-highlight-color:transparent}
+html{font-size:20px}
+body{
+  margin:0;background:var(--bg);color:var(--ink);
+  font-family:"Noto Sans TC","PingFang TC","Microsoft JhengHei",system-ui,sans-serif;
+  line-height:1.55;
+}
+button{font-family:inherit;color:inherit}
+#app{display:flex;flex-direction:column;height:100dvh;overflow:hidden}
+
+/* ============ 頂欄 ============ */
+#topbar{
+  display:flex;align-items:center;justify-content:space-between;gap:8px;
+  padding:10px 14px;background:var(--card);border-bottom:2px solid var(--line);
+  flex:0 0 auto;z-index:20;
+}
+.brand{display:flex;align-items:center;gap:10px;min-width:0}
+.brand-icon{font-size:1.7rem}
+.brand h1{font-size:1.05rem;margin:0;font-weight:900;letter-spacing:.02em;white-space:nowrap}
+.brand p{margin:0;font-size:.7rem;color:var(--muted);letter-spacing:.18em}
+.icon-btn{
+  border:2px solid var(--line);background:var(--card);border-radius:12px;
+  min-width:52px;min-height:52px;font-size:1.3rem;cursor:pointer;flex:0 0 auto;
+}
+.icon-btn:active{background:var(--primary-soft)}
+#demoBanner{
+  background:#FFF3D6;color:#7A5B12;font-size:.8rem;text-align:center;
+  padding:6px 10px;border-bottom:1px solid #EBD9A8;flex:0 0 auto;z-index:19;
+}
+#fatalBanner{
+  background:#FBE3DE;color:#8C2F1D;font-size:.85rem;text-align:center;
+  padding:8px 12px;border-bottom:1px solid #EFC4BA;flex:0 0 auto;z-index:19;
+}
+.hidden{display:none !important}
+
+/* ============ 主區與分頁 ============ */
+#main{flex:1 1 auto;position:relative;overflow:hidden}
+.view{position:absolute;inset:0}
+.view.scroll{overflow-y:auto;padding:18px 16px 40px;-webkit-overflow-scrolling:touch}
+
+/* ============ 底部大分頁按鈕 ============ */
+#tabbar{
+  flex:0 0 auto;display:flex;background:var(--card);
+  border-top:2px solid var(--line);padding:6px 8px calc(6px + env(safe-area-inset-bottom));
+  gap:6px;z-index:20;
+}
+.tab{
+  flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:2px;
+  border:none;background:none;border-radius:14px;padding:8px 4px;min-height:72px;
+  font-size:.85rem;font-weight:700;color:var(--muted);cursor:pointer;
+}
+.tab .tab-ico{font-size:1.55rem;line-height:1}
+.tab.active{background:var(--primary-soft);color:var(--primary-dark)}
+.tab.tab-add{background:var(--primary);color:#fff;box-shadow:var(--shadow)}
+.tab.tab-add.active{background:var(--primary-dark)}
+
+/* ============ 地圖頁 ============ */
+#map{position:absolute;inset:0;z-index:1;background:#EAE4D8}
+#counterPill{
+  position:absolute;top:12px;left:50%;transform:translateX(-50%);z-index:10;
+  background:var(--card);border:2px solid var(--line);border-radius:999px;
+  padding:8px 18px;font-size:.9rem;font-weight:700;box-shadow:var(--shadow);
+  white-space:nowrap;
+}
+#counterPill b{color:var(--primary);font-size:1.1rem}
+#btnReplay{
+  position:absolute;right:12px;bottom:18px;z-index:10;
+  background:var(--accent);color:#fff;border:none;border-radius:999px;
+  padding:12px 18px;font-size:.9rem;font-weight:700;box-shadow:var(--shadow);cursor:pointer;
+}
+#btnReplay:disabled{opacity:.6}
+.leaflet-control-zoom a{
+  width:46px !important;height:46px !important;line-height:46px !important;font-size:22px !important;
+}
+.gift-pin{
+  width:44px;height:44px;border-radius:50%;background:#fff;border:3px solid var(--primary);
+  display:flex;align-items:center;justify-content:center;font-size:22px;
+  box-shadow:0 3px 10px rgba(80,40,20,.3);
+}
+.cluster-pin{
+  border-radius:50%;background:var(--primary);color:#fff;border:4px solid #fff;
+  display:flex;align-items:center;justify-content:center;font-weight:900;
+  box-shadow:0 3px 10px rgba(80,40,20,.35);font-size:1rem;
+}
+.leaflet-popup-content{font-size:16px;line-height:1.5;margin:14px 16px;font-family:inherit}
+.leaflet-popup-content-wrapper{border-radius:14px}
+.pop-tags{margin-bottom:6px}
+.pop-note{font-size:17px;margin-bottom:8px;white-space:pre-wrap}
+.pop-meta{color:var(--muted);font-size:14px;border-top:1px solid var(--line);padding-top:6px}
+.chip{
+  display:inline-block;background:var(--accent-soft);color:var(--accent);
+  border-radius:999px;padding:2px 10px;font-size:.75rem;font-weight:700;margin:2px 4px 2px 0;
+}
+
+/* ============ 通用元件 ============ */
+.btn{
+  display:flex;align-items:center;justify-content:center;gap:8px;width:100%;
+  border:none;border-radius:var(--radius);cursor:pointer;font-weight:700;
+  background:var(--card);border:2px solid var(--line);
+}
+.btn.big{min-height:64px;font-size:1.05rem;padding:12px 18px}
+.btn.primary{background:var(--primary);border-color:var(--primary);color:#fff}
+.btn.primary:active{background:var(--primary-dark)}
+.btn.primary:disabled{background:#D9C9BF;border-color:#D9C9BF;color:#fff;cursor:default}
+.btn.ghost{background:none;border:2px solid var(--line);color:var(--muted)}
+.btn.danger{background:#FBE3DE;border-color:#EFC4BA;color:var(--danger)}
+.btn.link{background:none;border:none;color:var(--accent);text-decoration:underline;font-size:.9rem;min-height:44px;width:auto}
+input[type=text],input[type=date],input[type=search],textarea{
+  width:100%;border:2px solid var(--line);border-radius:12px;background:var(--card);
+  font-size:1.05rem;padding:14px;font-family:inherit;color:var(--ink);
+}
+input:focus,textarea:focus{outline:3px solid var(--gold);border-color:var(--gold)}
+label{font-size:.85rem;font-weight:700;color:var(--muted);display:block;margin:14px 0 6px}
+.hint{font-size:.8rem;color:var(--muted);background:var(--accent-soft);border-radius:12px;padding:10px 14px}
+h2{font-size:1.15rem;margin:6px 0 14px;font-weight:900}
+
+/* ============ 記錄精靈 ============ */
+.wizard{max-width:560px;margin:0 auto}
+.steps{display:flex;align-items:center;justify-content:center;margin-bottom:18px;gap:0}
+.step-dot{
+  width:42px;height:42px;border-radius:50%;background:var(--card);border:3px solid var(--line);
+  display:flex;align-items:center;justify-content:center;font-weight:900;color:var(--muted);flex:0 0 auto;
+}
+.step-dot.active{background:var(--primary);border-color:var(--primary);color:#fff}
+.step-dot.done{background:var(--accent);border-color:var(--accent);color:#fff}
+.step-line{width:44px;height:4px;background:var(--line);flex:0 0 auto}
+.step-panel > .btn{margin-bottom:12px}
+.wiz-nav{display:flex;gap:10px;margin-top:22px}
+.wiz-nav .btn{flex:1}
+.picked{
+  background:var(--card);border:2px solid var(--accent);border-radius:var(--radius);
+  padding:14px;margin-bottom:12px;
+}
+.picked-head{font-weight:900;color:var(--accent);margin-bottom:4px}
+.seg{display:flex;gap:8px;margin-bottom:10px}
+.seg-btn{
+  flex:1;min-height:58px;border-radius:14px;border:2px solid var(--line);
+  background:var(--card);font-size:1rem;font-weight:700;cursor:pointer;
+}
+.seg-btn.active{background:var(--primary);border-color:var(--primary);color:#fff}
+.tag-grid{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+.tag-btn{
+  min-height:60px;border-radius:14px;border:2px solid var(--line);background:var(--card);
+  font-size:.98rem;font-weight:700;cursor:pointer;padding:8px;
+}
+.tag-btn.on{background:var(--accent);border-color:var(--accent);color:#fff}
+.summary{
+  background:var(--primary-soft);border-radius:var(--radius);padding:14px 16px;
+  margin-top:16px;font-size:.92rem;
+}
+.summary div{margin:3px 0}
+.char-count{text-align:right;font-size:.75rem;color:var(--muted);margin-top:4px}
+
+/* ============ 我的紀錄 ============ */
+.mine-head{
+  background:linear-gradient(135deg,var(--primary),#D87A55);color:#fff;
+  border-radius:var(--radius);padding:18px;margin-bottom:16px;box-shadow:var(--shadow);
+}
+.mine-head b{font-size:1.5rem}
+.rec-card{
+  background:var(--card);border:2px solid var(--line);border-radius:var(--radius);
+  padding:14px 16px;margin-bottom:14px;box-shadow:0 2px 8px rgba(80,60,40,.06);
+}
+.rec-date{font-weight:900;color:var(--primary-dark)}
+.rec-place{color:var(--muted);font-size:.85rem;margin:2px 0 6px}
+.rec-note{white-space:pre-wrap;margin:6px 0}
+.rec-actions{display:flex;gap:8px;margin-top:10px}
+.rec-actions .btn{min-height:52px;font-size:.9rem}
+.empty-box{text-align:center;color:var(--muted);padding:40px 20px}
+.empty-box .big-emoji{font-size:3rem}
+
+/* ============ 覆蓋層／彈窗 ============ */
+.overlay{
+  position:fixed;inset:0;background:rgba(45,38,30,.6);z-index:1000;
+  display:flex;flex-direction:column;
+}
+.overlay.center{align-items:center;justify-content:center;padding:18px}
+.card{
+  background:var(--card);border-radius:20px;padding:24px 20px;width:100%;max-width:480px;
+  box-shadow:0 10px 40px rgba(0,0,0,.25);max-height:88dvh;overflow-y:auto;
+}
+.big-emoji{font-size:3.2rem;text-align:center}
+.welcome-card h2{text-align:center;font-size:1.4rem}
+.welcome-card p{font-size:.95rem}
+.welcome-card .btn{margin-top:14px}
+.welcome-card .hint{margin-top:14px}
+
+/* 地圖選點 */
+#pickerOverlay{background:var(--bg)}
+.picker-top{display:flex;gap:8px;padding:12px;background:var(--card);border-bottom:2px solid var(--line)}
+.picker-top input{flex:1}
+.search-results{
+  position:absolute;top:86px;left:12px;right:12px;z-index:1200;background:var(--card);
+  border-radius:14px;box-shadow:var(--shadow);overflow:hidden;border:2px solid var(--line);
+}
+.search-item{
+  display:block;width:100%;text-align:left;padding:14px;border:none;background:none;
+  border-bottom:1px solid var(--line);font-size:.9rem;cursor:pointer;
+}
+.search-item:active{background:var(--primary-soft)}
+#pickerMapWrap{flex:1;position:relative}
+#pickerMap{position:absolute;inset:0}
+#crosshair{
+  position:absolute;left:50%;top:50%;transform:translate(-50%,-100%);
+  font-size:44px;z-index:1100;pointer-events:none;
+  filter:drop-shadow(0 3px 3px rgba(0,0,0,.4));
+}
+.picker-bottom{padding:12px 16px calc(12px + env(safe-area-inset-bottom));background:var(--card);border-top:2px solid var(--line)}
+.picker-bottom p{margin:0 0 10px;font-size:.85rem;color:var(--muted);text-align:center}
+
+/* 慶祝 */
+.celebrate-card{text-align:center}
+.celebrate-card .big-emoji{font-size:4rem;animation:pop .5s ease}
+@keyframes pop{0%{transform:scale(.3)}70%{transform:scale(1.15)}100%{transform:scale(1)}}
+.celebrate-card h2{font-size:1.4rem}
+.celebrate-card .btn{margin-top:10px}
+
+/* 設定 */
+.set-section{border-top:2px solid var(--line);margin-top:18px;padding-top:14px}
+.set-section h3{font-size:.95rem;margin:0 0 10px;color:var(--muted)}
+.uid-box{
+  font-family:monospace;font-size:.75rem;background:var(--bg);border:1px dashed var(--line);
+  border-radius:10px;padding:10px;word-break:break-all;margin-bottom:8px;
+}
+.switch-row{display:flex;align-items:center;justify-content:space-between;gap:10px;min-height:56px}
+.switch-row span{font-size:.95rem;font-weight:700}
+.switch{position:relative;width:64px;height:36px;flex:0 0 auto}
+.switch input{opacity:0;width:0;height:0}
+.slider{
+  position:absolute;cursor:pointer;inset:0;background:#D8CFC0;border-radius:999px;transition:.2s;
+}
+.slider:before{
+  content:"";position:absolute;height:28px;width:28px;left:4px;top:4px;
+  background:#fff;border-radius:50%;transition:.2s;box-shadow:0 1px 4px rgba(0,0,0,.3);
+}
+.switch input:checked + .slider{background:var(--accent)}
+.switch input:checked + .slider:before{transform:translateX(28px)}
+
+/* 管理員列表 */
+.admin-row{
+  border:1px solid var(--line);border-radius:12px;padding:10px 12px;margin-bottom:10px;
+  font-size:.85rem;display:flex;justify-content:space-between;gap:10px;align-items:center;
+}
+.admin-row .btn{width:auto;min-height:48px;padding:6px 14px;flex:0 0 auto}
+.admin-row .meta{min-width:0}
+
+/* 放大閱讀 */
+.zoom-card{font-size:1.15rem}
+.zoom-card .z-date{font-weight:900;color:var(--primary-dark);font-size:1.2rem}
+.zoom-card .z-note{font-size:1.35rem;line-height:1.7;margin:14px 0;white-space:pre-wrap}
+.zoom-card .z-meta{color:var(--muted);font-size:.9rem}
+
+/* Toast */
+#toast{
+  position:fixed;bottom:110px;left:50%;transform:translateX(-50%);z-index:2000;
+  background:var(--ink);color:#fff;border-radius:999px;padding:12px 22px;
+  font-size:.9rem;font-weight:700;box-shadow:var(--shadow);max-width:88vw;text-align:center;
+  transition:opacity .3s;opacity:0;pointer-events:none;
+}
+#toast.show{opacity:1}
+
+/* 載入中 */
+#splash{
+  position:fixed;inset:0;background:var(--bg);z-index:3000;
+  display:flex;flex-direction:column;align-items:center;justify-content:center;gap:12px;
+}
+#splash .big-emoji{animation:float 1.6s ease-in-out infinite}
+@keyframes float{0%,100%{transform:translateY(0)}50%{transform:translateY(-10px)}}
+
+@media (min-width:700px){
+  html{font-size:21px}
+  .brand h1{font-size:1.2rem}
+}
+</style>
+</head>
+<body>
+<div id="app">
+  <header id="topbar">
+    <div class="brand">
+      <span class="brand-icon">🎁</span>
+      <div>
+        <h1 id="appTitle">好人好事地圖</h1>
+        <p id="appSub">觀察 · 欣賞 · 分享</p>
+      </div>
+    </div>
+    <button id="btnSettings" class="icon-btn" aria-label="設定">⚙️</button>
+  </header>
+  <div id="demoBanner" class="hidden">🔧 示範模式：資料只儲存在此裝置（未連接資料庫）</div>
+  <div id="fatalBanner" class="hidden"></div>
+
+  <main id="main">
+    <!-- 地圖 -->
+    <section id="view-map" class="view">
+      <div id="map"></div>
+      <div id="counterPill">🎁 大家已送出 <b id="totalCount">0</b> 份小禮物</div>
+      <button id="btnReplay">▶ 重溫擴散</button>
+    </section>
+
+    <!-- 記錄好事（三步精靈） -->
+    <section id="view-add" class="view scroll hidden">
+      <div class="wizard">
+        <div class="steps">
+          <div class="step-dot active" id="dot1">1</div>
+          <div class="step-line"></div>
+          <div class="step-dot" id="dot2">2</div>
+          <div class="step-line"></div>
+          <div class="step-dot" id="dot3">3</div>
+        </div>
+
+        <div id="addStep1" class="step-panel">
+          <h2 id="addTitle">📍 好事在哪裡發生？</h2>
+          <button id="btnGeo" class="btn big primary">📍 用我目前的位置</button>
+          <button id="btnPickMap" class="btn big">🗺️ 在地圖上選位置</button>
+          <div id="pickedCard" class="picked hidden">
+            <div class="picked-head">✅ 已選好位置</div>
+            <label for="placeInput">地點名稱（可以修改）</label>
+            <input type="text" id="placeInput" maxlength="60" placeholder="例如：Camden 巴士站">
+            <button id="btnRepick" class="btn link">↺ 重新選擇位置</button>
+          </div>
+          <p class="hint">🔒 放心：公開地圖只會顯示<b>大約位置</b>（一二百米範圍內），不會顯示準確地點。</p>
+          <div class="wiz-nav">
+            <button id="toStep2" class="btn big primary" disabled>下一步 ➜</button>
+          </div>
+        </div>
+
+        <div id="addStep2" class="step-panel hidden">
+          <h2>🗓️ 何時發生？</h2>
+          <div class="seg">
+            <button class="seg-btn active" data-day="today">今天</button>
+            <button class="seg-btn" data-day="yesterday">昨天</button>
+            <button class="seg-btn" data-day="pick">選日期</button>
+          </div>
+          <input type="date" id="dateInput" class="hidden">
+          <h2 style="margin-top:22px">🏷️ 是哪一類好事？（可選多個）</h2>
+          <div id="tagGrid" class="tag-grid"></div>
+          <div class="wiz-nav">
+            <button id="backTo1" class="btn big ghost">⬅ 上一步</button>
+            <button id="toStep3" class="btn big primary">下一步 ➜</button>
+          </div>
+        </div>
+
+        <div id="addStep3" class="step-panel hidden">
+          <h2>✏️ 想補充幾句嗎？（可以留空）</h2>
+          <textarea id="noteInput" rows="4" maxlength="300" placeholder="例如：一位先生在巴士上讓座給帶著小孩的媽媽，我送了摺紙給他，聊了幾句，大家都很開心。（請不要寫對方的全名或聯絡方法）"></textarea>
+          <div class="char-count"><span id="noteCount">0</span>/300</div>
+          <div id="proxyWrap" class="hidden">
+            <label for="proxyName">👥 代錄：這件好事的記錄人是</label>
+            <input type="text" id="proxyName" maxlength="20" placeholder="例如：陳伯">
+          </div>
+          <div id="summaryCard" class="summary"></div>
+          <div class="wiz-nav">
+            <button id="backTo2" class="btn big ghost">⬅ 上一步</button>
+            <button id="btnSubmit" class="btn big primary">🎁 送出</button>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- 我的紀錄 -->
+    <section id="view-mine" class="view scroll hidden">
+      <div class="wizard">
+        <div class="mine-head">
+          <div id="mineGreet">你好！</div>
+          <div>你已經送出 <b id="mineCount">0</b> 份小禮物 🎁</div>
+        </div>
+        <div id="mineList"></div>
+      </div>
+    </section>
+  </main>
+
+  <nav id="tabbar">
+    <button class="tab active" data-view="map"><span class="tab-ico">🗺️</span><span>地圖</span></button>
+    <button class="tab tab-add" data-view="add"><span class="tab-ico">➕</span><span>記錄好事</span></button>
+    <button class="tab" data-view="mine"><span class="tab-ico">📖</span><span>我的紀錄</span></button>
+  </nav>
+</div>
+
+<!-- 歡迎頁 -->
+<div id="welcomeOverlay" class="overlay center hidden">
+  <div class="card welcome-card">
+    <div class="big-emoji">🎁</div>
+    <h2>歡迎！</h2>
+    <p>這裡記錄大家在倫敦遇見的<b>好人好事</b>，以及送出摺紙小禮物的故事。小小的善意，可以一圈一圈擴散出去。</p>
+    <p><b>請問怎樣稱呼你？</b></p>
+    <input type="text" id="nickInput" maxlength="20" placeholder="例如：陳伯、Mary">
+    <button id="btnStart" class="btn big primary">開始 ➜</button>
+    <p class="hint">🔒 地圖只會顯示大約位置；你的紀錄隨時可以修改或刪除。請不要在紀錄中寫別人的全名或聯絡方法。</p>
+  </div>
+</div>
+
+<!-- 地圖選點 -->
+<div id="pickerOverlay" class="overlay hidden">
+  <div class="picker-top">
+    <input type="search" id="searchInput" placeholder="🔍 輸入地方名稱，例如 Brixton Station">
+    <button id="pickerClose" class="icon-btn" aria-label="關閉">✕</button>
+  </div>
+  <div id="searchResults" class="search-results hidden"></div>
+  <div id="pickerMapWrap">
+    <div id="pickerMap"></div>
+    <div id="crosshair">📍</div>
+  </div>
+  <div class="picker-bottom">
+    <p>用手指移動地圖，讓大頭針指住好事發生的地方</p>
+    <button id="pickerConfirm" class="btn big primary">✓ 就是這裡</button>
+  </div>
+</div>
+
+<!-- 慶祝 -->
+<div id="celebrateOverlay" class="overlay center hidden">
+  <div class="card celebrate-card">
+    <div class="big-emoji">🎉</div>
+    <h2>多謝分享！</h2>
+    <p>地圖上又多了一件好人好事。<br>小小善意，繼續擴散！</p>
+    <button id="celebrateMap" class="btn big primary">🗺️ 去地圖看看</button>
+    <button id="celebrateMore" class="btn big">➕ 再記一件</button>
+  </div>
+</div>
+
+<!-- 設定 -->
+<div id="settingsOverlay" class="overlay center hidden">
+  <div class="card">
+    <h2>⚙️ 設定</h2>
+    <label for="nickEdit">我的暱稱</label>
+    <input type="text" id="nickEdit" maxlength="20">
+    <button id="btnSaveNick" class="btn big" style="margin-top:10px">儲存暱稱</button>
+
+    <div class="set-section">
+      <h3>我的識別碼（管理員設定時用）</h3>
+      <div class="uid-box" id="uidBox">－</div>
+      <button id="btnCopyUid" class="btn link">📋 複製識別碼</button>
+    </div>
+
+    <div class="set-section hidden" id="demoAdminSection">
+      <h3>示範模式</h3>
+      <div class="switch-row">
+        <span>預覽管理員介面</span>
+        <label class="switch"><input type="checkbox" id="demoAdminToggle"><span class="slider"></span></label>
+      </div>
+    </div>
+
+    <div class="set-section hidden" id="adminSection">
+      <h3>👑 管理員功能</h3>
+      <div class="switch-row">
+        <span>代錄模式<br><small style="font-weight:400;color:var(--muted)">替不用手機的組員記錄</small></span>
+        <label class="switch"><input type="checkbox" id="proxyToggle"><span class="slider"></span></label>
+      </div>
+      <button id="btnAdminList" class="btn big" style="margin-top:10px">📋 管理所有紀錄</button>
+      <button id="btnExportCsv" class="btn big" style="margin-top:10px">⬇️ 匯出 CSV（Excel）</button>
+    </div>
+
+    <div class="set-section">
+      <p style="font-size:.75rem;color:var(--muted);margin:0">
+        🔒 私隱：系統只儲存模糊化後的位置（隨機偏移一二百米），從不儲存準確地點。
+        你可以隨時修改或刪除自己的紀錄；如需協助請聯絡活動負責人。
+      </p>
+    </div>
+    <button id="settingsClose" class="btn big ghost" style="margin-top:16px">關閉</button>
+  </div>
+</div>
+
+<!-- 管理所有紀錄 -->
+<div id="adminOverlay" class="overlay center hidden">
+  <div class="card">
+    <h2>📋 所有紀錄</h2>
+    <input type="search" id="adminSearch" placeholder="🔍 搜尋暱稱、地點或內容">
+    <div id="adminList" style="margin-top:14px"></div>
+    <button id="adminClose" class="btn big ghost" style="margin-top:10px">關閉</button>
+  </div>
+</div>
+
+<!-- 放大閱讀 -->
+<div id="zoomOverlay" class="overlay center hidden">
+  <div class="card zoom-card">
+    <div class="z-date" id="zoomDate"></div>
+    <div id="zoomTags"></div>
+    <div class="z-note" id="zoomNote"></div>
+    <div class="z-meta" id="zoomMeta"></div>
+    <button id="zoomClose" class="btn big primary" style="margin-top:18px">關閉</button>
+  </div>
+</div>
+
+<!-- 確認 -->
+<div id="confirmOverlay" class="overlay center hidden">
+  <div class="card">
+    <h2 id="confirmMsg">確定嗎？</h2>
+    <button id="confirmYes" class="btn big danger">確定</button>
+    <button id="confirmNo" class="btn big ghost" style="margin-top:10px">取消</button>
+  </div>
+</div>
+
+<div id="toast"></div>
+<div id="splash"><div class="big-emoji">🎁</div><div>載入中⋯</div></div>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/leaflet.markercluster/1.5.3/leaflet.markercluster.min.js"></script>
+<script type="module">
+/* =====================================================================
+   ① 應用程式設定 —— 教會可以自行修改這一段
+   ===================================================================== */
+const APP_CONFIG = {
+  title: "好人好事地圖",            // 應用程式名稱（顯示在頂欄）
+  subtitle: "觀察 · 欣賞 · 分享",   // 副標題
+  center: [51.5074, -0.1278],       // 地圖中心（倫敦）
+  zoom: 11,
+  fuzzMinM: 100,                    // 位置模糊化：最小偏移（米）
+  fuzzMaxM: 200,                    // 位置模糊化：最大偏移（米）
+  tags: ["🪑 讓座", "🚪 開門・擋門", "💪 幫手提物", "🎒 拾遺歸還", "🧭 指路・解困", "😊 微笑・問候", "💛 其他"],
+};
+
+/* =====================================================================
+   ② Firebase 設定 —— 按《設定指南》第 5 步，把你的設定貼在這裡
+   （未貼上時，程式會自動以「示範模式」運行，方便先試用）
+   ===================================================================== */
+const FIREBASE_CONFIG = {
+  apiKey: "AIzaSyBPG6KAPutWWlWGF7zsOtakxLu2mrpnnFI",
+  authDomain: "flowchurchlondon-gooddeeds.firebaseapp.com",
+  projectId: "flowchurchlondon-gooddeeds",
+  storageBucket: "flowchurchlondon-gooddeeds.firebasestorage.app",
+  messagingSenderId: "767875273844",
+  appId: "1:767875273844:web:42a8c5f33a45948d9b6d21",
+};
+const DEMO_MODE = /PASTE_/.test(FIREBASE_CONFIG.apiKey + FIREBASE_CONFIG.projectId);
+
+/* =====================================================================
+   工具函數
+   ===================================================================== */
+const $ = (id) => document.getElementById(id);
+const esc = (s) => String(s ?? "").replace(/[&<>"']/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c]));
+
+/* localStorage 安全包裝（部分環境不可用時退回記憶體） */
+const memLS = {};
+const safeLS = {
+  get(k) { try { return localStorage.getItem(k) ?? memLS[k] ?? null; } catch (e) { return memLS[k] ?? null; } },
+  set(k, v) { memLS[k] = v; try { localStorage.setItem(k, v); } catch (e) {} },
+};
+
+function dstr(d) {
+  return d.getFullYear() + "-" + String(d.getMonth() + 1).padStart(2, "0") + "-" + String(d.getDate()).padStart(2, "0");
+}
+function todayStr(offsetDays = 0) { const d = new Date(); d.setDate(d.getDate() + offsetDays); return dstr(d); }
+function fmtDate(s) {
+  if (!s) return "";
+  if (s === todayStr()) return "今天";
+  if (s === todayStr(-1)) return "昨天";
+  const [y, m, d] = s.split("-").map(Number);
+  const thisYear = new Date().getFullYear();
+  return (y === thisYear ? "" : y + "年") + m + "月" + d + "日";
+}
+
+/* 位置模糊化：只儲存偏移後的座標，系統從不儲存準確位置 */
+function fuzz(lat, lng) {
+  const dist = APP_CONFIG.fuzzMinM + Math.random() * (APP_CONFIG.fuzzMaxM - APP_CONFIG.fuzzMinM);
+  const angle = Math.random() * 2 * Math.PI;
+  const dLat = (dist * Math.cos(angle)) / 111320;
+  const dLng = (dist * Math.sin(angle)) / (111320 * Math.cos((lat * Math.PI) / 180));
+  return { lat: +(lat + dLat).toFixed(5), lng: +(lng + dLng).toFixed(5) };
+}
+
+let toastTimer = null;
+function toast(msg) {
+  const t = $("toast");
+  t.textContent = msg;
+  t.classList.add("show");
+  clearTimeout(toastTimer);
+  toastTimer = setTimeout(() => t.classList.remove("show"), 2600);
+}
+function showFatal(msg) {
+  const b = $("fatalBanner");
+  b.textContent = "⚠️ " + msg;
+  b.classList.remove("hidden");
+  $("splash").classList.add("hidden");
+}
+
+/* =====================================================================
+   應用程式狀態
+   ===================================================================== */
+const state = {
+  uid: null,
+  nickname: null,
+  isAdmin: false,
+  adminPreview: false,   // 示範模式下預覽管理員介面
+  proxyMode: false,      // 管理員代錄模式
+  records: [],
+  map: null,
+  cluster: null,
+  markerById: {},
+  pickerMap: null,
+  editingId: null,
+  draft: null,
+  replaying: false,
+  currentView: "map",
+};
+function isAdminUI() { return state.isAdmin || (DEMO_MODE && state.adminPreview); }
+
+/* =====================================================================
+   資料層 A：示範模式（內建例子，資料存在本機）
+   ===================================================================== */
+const DEMO_SEED = [
+  { id: "d01", uid: "demo-user", nickname: "陳伯", lat: 51.5113, lng: -0.1310, place: "中國城 Gerrard Street", tags: ["😊 微笑・問候"], note: "茶樓裡一位年輕人主動幫幾位長者拼桌斟茶，我送了一隻紙鶴給他，他說會放在書桌上。", happenedAt: "2026-07-15", createdAt: "2026-07-15T10:00:00Z" },
+  { id: "d02", uid: "u2", nickname: "梅姐", lat: 51.5390, lng: -0.1426, place: "Camden Town 地鐵站", tags: ["🪑 讓座"], note: "一位女士在 Northern Line 讓座給拿著拐杖的伯伯，還扶他坐好。", happenedAt: "2026-07-14", createdAt: "2026-07-14T09:00:00Z" },
+  { id: "d03", uid: "u3", nickname: "David", lat: 51.4627, lng: -0.1145, place: "Brixton 市場", tags: ["💪 幫手提物"], note: "檔主幫一位婆婆把兩大袋菜搬到巴士站，全程有說有笑。", happenedAt: "2026-07-13", createdAt: "2026-07-13T15:00:00Z" },
+  { id: "d04", uid: "u4", nickname: "王師奶", lat: 51.5416, lng: -0.0042, place: "Stratford 車站", tags: ["🧭 指路・解困"], note: "站務員很耐心地教一位不會用售票機的遊客買票，教完還畫了張小地圖。", happenedAt: "2026-07-12", createdAt: "2026-07-12T11:00:00Z" },
+  { id: "d05", uid: "u5", nickname: "明哥", lat: 51.5560, lng: -0.2795, place: "Wembley 公園", tags: ["🎒 拾遺歸還"], note: "小朋友撿到銀包，馬上交給公園職員，職員廣播尋回失主。", happenedAt: "2026-07-10", createdAt: "2026-07-10T16:00:00Z" },
+  { id: "d06", uid: "u6", nickname: "Grace", lat: 51.5150, lng: -0.3019, place: "Ealing Broadway", tags: ["🚪 開門・擋門"], note: "下大雨，一位先生站在店門口幫每位推嬰兒車的家長擋門。", happenedAt: "2026-07-08", createdAt: "2026-07-08T14:00:00Z" },
+  { id: "d07", uid: "u7", nickname: "蘇太", lat: 51.3762, lng: -0.0982, place: "Croydon 圖書館", tags: ["💛 其他"], note: "圖書館職員替長者逐個字放大列印通知，又教他們用老花鏡看目錄。", happenedAt: "2026-07-06", createdAt: "2026-07-06T10:30:00Z" },
+  { id: "d08", uid: "u8", nickname: "強叔", lat: 51.5054, lng: -0.0235, place: "Canary Wharf 碼頭", tags: ["😊 微笑・問候"], note: "晨運時一位跑步的小姐每天都跟我們揮手問早，今天終於送了摺紙給她。", happenedAt: "2026-07-04", createdAt: "2026-07-04T08:00:00Z" },
+  { id: "d09", uid: "u9", nickname: "阿玲", lat: 51.5724, lng: -0.1941, place: "Golders Green 巴士站", tags: ["🪑 讓座", "😊 微笑・問候"], note: "13 號巴士上一位學生讓座給孕婦，下車時還說 have a nice day。", happenedAt: "2026-07-01", createdAt: "2026-07-01T17:00:00Z" },
+  { id: "d10", uid: "u10", nickname: "小恩", lat: 51.4123, lng: -0.3007, place: "Kingston 河邊", tags: ["💪 幫手提物"], note: "一位叔叔幫推輪椅的家庭把輪椅抬上斜坡，說自己順路。", happenedAt: "2026-06-28", createdAt: "2026-06-28T13:00:00Z" },
+  { id: "d11", uid: "u11", nickname: "Peter", lat: 51.5830, lng: -0.0190, place: "Walthamstow 街市", tags: ["🎒 拾遺歸還"], note: "菜檔阿姐追了半條街，把顧客漏低的手套還給人家。", happenedAt: "2026-06-25", createdAt: "2026-06-25T12:00:00Z" },
+  { id: "d12", uid: "u12", nickname: "何姑娘", lat: 51.4943, lng: -0.1005, place: "Elephant & Castle", tags: ["🧭 指路・解困"], note: "一位街坊帶迷路的伯伯走到診所門口才離開。送上小星星一顆！", happenedAt: "2026-06-22", createdAt: "2026-06-22T09:30:00Z" },
+];
+
+const demoStore = (() => {
+  let cb = null;
+  let records = [];
+  function persist() { safeLS.set("demo_records", JSON.stringify(records)); }
+  function emit() {
+    const sorted = records.slice().sort((a, b) => (a.happenedAt < b.happenedAt ? 1 : a.happenedAt > b.happenedAt ? -1 : 0));
+    cb.onRecords(sorted);
+  }
+  return {
+    async init(callbacks) {
+      cb = callbacks;
+      try { const saved = safeLS.get("demo_records"); records = saved ? JSON.parse(saved) : DEMO_SEED.slice(); }
+      catch (e) { records = DEMO_SEED.slice(); }
+      state.uid = "demo-user";
+      cb.onAuth(safeLS.get("nickname"));
+      emit();
+    },
+    async addRecord(rec) {
+      rec.id = "d" + Date.now() + Math.floor(Math.random() * 999);
+      rec.createdAt = new Date().toISOString();
+      records.push(rec); persist(); emit();
+      return rec.id;
+    },
+    async updateRecord(id, patch) {
+      const r = records.find((x) => x.id === id);
+      if (r) Object.assign(r, patch);
+      persist(); emit();
+    },
+    async deleteRecord(id) {
+      records = records.filter((x) => x.id !== id);
+      persist(); emit();
+    },
+    async saveNickname(nick) { safeLS.set("nickname", nick); },
+  };
+})();
+
+/* =====================================================================
+   資料層 B：Firebase（正式模式）
+   ===================================================================== */
+const firebaseStore = (() => {
+  let db = null, fb = null;
+  return {
+    async init(cb) {
+      try {
+        const appM = await import("https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js");
+        const authM = await import("https://www.gstatic.com/firebasejs/10.12.2/firebase-auth.js");
+        const fsM = await import("https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js");
+        fb = fsM;
+        const app = appM.initializeApp(FIREBASE_CONFIG);
+        try { db = fsM.initializeFirestore(app, { localCache: fsM.persistentLocalCache() }); }
+        catch (e) { db = fsM.getFirestore(app); }
+        const auth = authM.getAuth(app);
+        let subscribed = false;
+        authM.onAuthStateChanged(auth, async (user) => {
+          if (!user || subscribed) return;
+          subscribed = true;
+          state.uid = user.uid;
+          let nick = safeLS.get("nickname");
+          if (!nick) {
+            try { const snap = await fb.getDoc(fb.doc(db, "users", user.uid)); if (snap.exists()) { nick = snap.data().nickname; safeLS.set("nickname", nick); } } catch (e) {}
+          }
+          try { const a = await fb.getDoc(fb.doc(db, "admins", user.uid)); state.isAdmin = a.exists(); } catch (e) { state.isAdmin = false; }
+          cb.onAuth(nick);
+          const q = fb.query(fb.collection(db, "records"), fb.orderBy("happenedAt", "desc"), fb.limit(2000));
+          fb.onSnapshot(q, (qs) => {
+            const list = [];
+            qs.forEach((d) => list.push({ id: d.id, ...d.data() }));
+            cb.onRecords(list);
+          }, (err) => {
+            console.error("onSnapshot error", err);
+            showFatal("讀取資料失敗：請確認 Firestore 安全規則已按指南發佈。");
+          });
+        });
+        await authM.signInAnonymously(auth);
+      } catch (e) {
+        console.error("firebase init error", e);
+        showFatal("連接資料庫失敗：請檢查 index.html 內的 Firebase 設定是否已正確貼上。");
+      }
+    },
+    async addRecord(rec) {
+      rec.createdAt = fb.serverTimestamp();
+      const ref = await fb.addDoc(fb.collection(db, "records"), rec);
+      return ref.id;
+    },
+    async updateRecord(id, patch) { await fb.updateDoc(fb.doc(db, "records", id), patch); },
+    async deleteRecord(id) { await fb.deleteDoc(fb.doc(db, "records", id)); },
+    async saveNickname(nick) {
+      safeLS.set("nickname", nick);
+      await fb.setDoc(fb.doc(db, "users", state.uid), { nickname: nick, updatedAt: fb.serverTimestamp() }, { merge: true });
+    },
+  };
+})();
+
+const store = DEMO_MODE ? demoStore : firebaseStore;
+
+/* =====================================================================
+   地圖
+   ===================================================================== */
+function initMap() {
+  state.map = L.map("map", { zoomControl: true }).setView(APP_CONFIG.center, APP_CONFIG.zoom);
+  L.tileLayer("https://tile.openstreetmap.org/{z}/{x}/{y}.png", {
+    maxZoom: 19,
+    attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a>',
+  }).addTo(state.map);
+  state.cluster = L.markerClusterGroup({
+    showCoverageOnHover: false,
+    maxClusterRadius: 46,
+    iconCreateFunction(cluster) {
+      const n = cluster.getChildCount();
+      const size = n < 10 ? 48 : n < 50 ? 56 : 66;
+      return L.divIcon({
+        html: '<div class="cluster-pin" style="width:' + size + "px;height:" + size + 'px">' + n + "</div>",
+        className: "", iconSize: [size, size],
+      });
+    },
+  });
+  state.map.addLayer(state.cluster);
+}
+
+function giftIcon() {
+  return L.divIcon({ html: '<div class="gift-pin">🎁</div>', className: "", iconSize: [44, 44], iconAnchor: [22, 22], popupAnchor: [0, -24] });
+}
+
+function popupHtml(r) {
+  const tags = (r.tags || []).map((t) => '<span class="chip">' + esc(t) + "</span>").join("");
+  const note = r.note ? esc(r.note) : "送出了一份小禮物 🎁";
+  return (
+    '<div class="pop">' +
+    (tags ? '<div class="pop-tags">' + tags + "</div>" : "") +
+    '<div class="pop-note">' + note + "</div>" +
+    '<div class="pop-meta">📍 ' + esc(r.place || "倫敦某處") + "<br>🗓️ " + fmtDate(r.happenedAt) + " · " + esc(r.nickname || "朋友") + "</div>" +
+    "</div>"
+  );
+}
+
+function makeMarker(r) {
+  const m = L.marker([r.lat, r.lng], { icon: giftIcon() });
+  m.bindPopup(popupHtml(r), { maxWidth: 300, autoPanPadding: L.point(30, 96) });
+  return m;
+}
+
+function renderMarkers() {
+  if (!state.cluster || state.replaying) return;
+  state.cluster.clearLayers();
+  state.markerById = {};
+  const ms = [];
+  for (const r of state.records) {
+    if (typeof r.lat !== "number" || typeof r.lng !== "number") continue;
+    const m = makeMarker(r);
+    state.markerById[r.id] = m;
+    ms.push(m);
+  }
+  state.cluster.addLayers(ms);
+  $("btnReplay").classList.toggle("hidden", state.records.length < 2);
+}
+
+/* ▶ 重溫擴散：按時間先後把 pin 逐一放上地圖 */
+function replay() {
+  if (state.replaying || state.records.length < 2) return;
+  state.replaying = true;
+  const btn = $("btnReplay");
+  btn.disabled = true;
+  const seq = state.records.slice().sort((a, b) => (a.happenedAt > b.happenedAt ? 1 : a.happenedAt < b.happenedAt ? -1 : 0));
+  state.cluster.clearLayers();
+  $("totalCount").textContent = "0";
+  let i = 0;
+  const timer = setInterval(() => {
+    if (i >= seq.length) {
+      clearInterval(timer);
+      setTimeout(() => {
+        state.replaying = false;
+        btn.disabled = false;
+        renderMarkers();
+        updateCounter();
+      }, 1200);
+      return;
+    }
+    state.cluster.addLayer(makeMarker(seq[i]));
+    i++;
+    $("totalCount").textContent = String(i);
+    btn.textContent = "▶ " + fmtDate(seq[Math.min(i, seq.length) - 1].happenedAt);
+  }, 220);
+  btn.textContent = "▶ 播放中⋯";
+  setTimeout(() => { btn.textContent = "▶ 重溫擴散"; }, 220 * seq.length + 1400);
+}
+
+function updateCounter() {
+  $("totalCount").textContent = String(state.records.length);
+  $("mineCount").textContent = String(myRecords().length);
+}
+function myRecords() { return state.records.filter((r) => r.uid === state.uid); }
+
+/* =====================================================================
+   分頁切換
+   ===================================================================== */
+function showView(name, keepDraft = false) {
+  state.currentView = name;
+  for (const v of ["map", "add", "mine"]) {
+    $("view-" + v).classList.toggle("hidden", v !== name);
+  }
+  document.querySelectorAll("#tabbar .tab").forEach((t) => t.classList.toggle("active", t.dataset.view === name));
+  if (name === "map" && state.map) setTimeout(() => state.map.invalidateSize(), 60);
+  if (name === "add" && !keepDraft) resetWizard();
+  if (name === "mine") renderMine();
+}
+
+/* =====================================================================
+   記錄精靈
+   ===================================================================== */
+function newDraft() {
+  return { lat: null, lng: null, locChanged: false, place: "", tags: [], day: "today", date: todayStr(), note: "" };
+}
+
+function resetWizard() {
+  state.editingId = null;
+  state.draft = newDraft();
+  $("addTitle").textContent = "📍 好事在哪裡發生？";
+  $("btnSubmit").textContent = "🎁 送出";
+  $("pickedCard").classList.add("hidden");
+  $("btnGeo").classList.remove("hidden");
+  $("btnPickMap").classList.remove("hidden");
+  $("placeInput").value = "";
+  $("toStep2").disabled = true;
+  document.querySelectorAll(".seg-btn").forEach((b) => b.classList.toggle("active", b.dataset.day === "today"));
+  const di = $("dateInput");
+  di.classList.add("hidden");
+  di.value = todayStr();
+  di.max = todayStr();
+  document.querySelectorAll(".tag-btn").forEach((b) => b.classList.remove("on"));
+  $("noteInput").value = "";
+  $("noteCount").textContent = "0";
+  $("proxyName").value = "";
+  goStep(1);
+}
+
+function goStep(n) {
+  for (let i = 1; i <= 3; i++) {
+    $("addStep" + i).classList.toggle("hidden", i !== n);
+    const dot = $("dot" + i);
+    dot.classList.toggle("active", i === n);
+    dot.classList.toggle("done", i < n);
+  }
+  if (n === 3) {
+    $("proxyWrap").classList.toggle("hidden", !(state.proxyMode && isAdminUI()));
+    updateSummary();
+  }
+  $("view-add").scrollTop = 0;
+}
+
+function locationChosen() {
+  $("pickedCard").classList.remove("hidden");
+  $("btnGeo").classList.add("hidden");
+  $("btnPickMap").classList.add("hidden");
+  $("toStep2").disabled = false;
+}
+
+function computeDate() {
+  const d = state.draft;
+  if (d.day === "today") return todayStr();
+  if (d.day === "yesterday") return todayStr(-1);
+  return $("dateInput").value || todayStr();
+}
+
+function updateSummary() {
+  const d = state.draft;
+  const tags = d.tags.length ? d.tags.join("、") : "（未選類別）";
+  $("summaryCard").innerHTML =
+    "<div>📍 " + esc($("placeInput").value.trim() || "倫敦某處") + "</div>" +
+    "<div>🗓️ " + esc(fmtDate(computeDate())) + "</div>" +
+    "<div>🏷️ " + esc(tags) + "</div>";
+}
+
+/* —— 目前位置 —— */
+function useGeolocation() {
+  if (!navigator.geolocation) { toast("此裝置不支援定位，請改用地圖選位置"); return; }
+  const btn = $("btnGeo");
+  btn.disabled = true;
+  btn.textContent = "📡 正在找你的位置⋯";
+  navigator.geolocation.getCurrentPosition(
+    (pos) => {
+      btn.disabled = false;
+      btn.textContent = "📍 用我目前的位置";
+      state.draft.lat = pos.coords.latitude;
+      state.draft.lng = pos.coords.longitude;
+      state.draft.locChanged = true;
+      locationChosen();
+      reverseGeocode(pos.coords.latitude, pos.coords.longitude);
+    },
+    (err) => {
+      btn.disabled = false;
+      btn.textContent = "📍 用我目前的位置";
+      console.warn("geolocation error", err);
+      toast("找不到你的位置，請改用「在地圖上選位置」");
+    },
+    { enableHighAccuracy: false, timeout: 10000, maximumAge: 60000 }
+  );
+}
+
+/* —— 地圖選點 —— */
+function openPicker() {
+  $("pickerOverlay").classList.remove("hidden");
+  $("searchResults").classList.add("hidden");
+  $("searchInput").value = "";
+  setTimeout(() => {
+    if (!state.pickerMap) {
+      state.pickerMap = L.map("pickerMap", { zoomControl: true });
+      L.tileLayer("https://tile.openstreetmap.org/{z}/{x}/{y}.png", { maxZoom: 19, attribution: "&copy; OpenStreetMap" }).addTo(state.pickerMap);
+    }
+    const c = state.draft.lat != null ? [state.draft.lat, state.draft.lng] : APP_CONFIG.center;
+    const z = state.draft.lat != null ? 16 : APP_CONFIG.zoom;
+    state.pickerMap.setView(c, z);
+    state.pickerMap.invalidateSize();
+  }, 80);
+}
+
+function confirmPicker() {
+  const c = state.pickerMap.getCenter();
+  state.draft.lat = c.lat;
+  state.draft.lng = c.lng;
+  state.draft.locChanged = true;
+  $("pickerOverlay").classList.add("hidden");
+  locationChosen();
+  reverseGeocode(c.lat, c.lng);
+}
+
+/* —— 地名搜尋／反查（OpenStreetMap Nominatim 免費服務） —— */
+function debounce(fn, ms) { let t; return (...a) => { clearTimeout(t); t = setTimeout(() => fn(...a), ms); }; }
+
+function shortAddr(j) {
+  const a = j.address || {};
+  const p1 = j.name || a.amenity || a.shop || a.building || a.station || a.road || a.pedestrian || "";
+  const p2 = a.suburb || a.neighbourhood || a.quarter || a.town || a.borough || a.city_district || "";
+  const s = [p1, p2].filter(Boolean).join(", ");
+  return s || (j.display_name || "").split(",").slice(0, 2).map((x) => x.trim()).join(", ");
+}
+
+async function searchPlace(q) {
+  const box = $("searchResults");
+  if (!q || q.length < 2) { box.classList.add("hidden"); return; }
+  try {
+    const url = "https://nominatim.openstreetmap.org/search?format=jsonv2&limit=5&accept-language=zh-TW,zh,en" +
+      "&viewbox=-0.62,51.72,0.36,51.26&q=" + encodeURIComponent(q);
+    const res = await fetch(url);
+    const list = await res.json();
+    if (!Array.isArray(list) || !list.length) {
+      box.innerHTML = '<div class="search-item">找不到，請試試其他寫法（例如英文街名）</div>';
+      box.classList.remove("hidden");
+      return;
+    }
+    box.innerHTML = list.map((r) =>
+      '<button class="search-item" data-lat="' + r.lat + '" data-lon="' + r.lon + '" data-name="' + esc(shortAddr(r)) + '">📍 ' +
+      esc((r.display_name || "").split(",").slice(0, 3).join(",")) + "</button>"
+    ).join("");
+    box.classList.remove("hidden");
+  } catch (e) { console.warn("search failed", e); }
+}
+
+async function reverseGeocode(lat, lng) {
+  try {
+    const url = "https://nominatim.openstreetmap.org/reverse?format=jsonv2&accept-language=zh-TW,zh,en&lat=" + lat + "&lon=" + lng;
+    const res = await fetch(url);
+    const j = await res.json();
+    const name = shortAddr(j);
+    if (name && !$("placeInput").value.trim()) $("placeInput").value = name.slice(0, 60);
+  } catch (e) { console.warn("reverse geocode failed", e); }
+}
+
+/* —— 送出 —— */
+async function submitRecord() {
+  const d = state.draft;
+  if (d.lat == null) { toast("請先選擇位置"); goStep(1); return; }
+  const btn = $("btnSubmit");
+  btn.disabled = true;
+  btn.textContent = "⏳ 儲存中⋯";
+  try {
+    const proxyOn = state.proxyMode && isAdminUI();
+    const proxyName = $("proxyName").value.trim();
+    const base = {
+      place: $("placeInput").value.trim().slice(0, 60),
+      tags: d.tags.slice(0, 8),
+      note: $("noteInput").value.trim().slice(0, 300),
+      happenedAt: computeDate(),
+    };
+    if (state.editingId) {
+      const patch = { ...base };
+      if (d.locChanged) { const f = fuzz(d.lat, d.lng); patch.lat = f.lat; patch.lng = f.lng; }
+      await store.updateRecord(state.editingId, patch);
+      toast("✅ 已更新");
+      showView("mine");
+    } else {
+      const f = fuzz(d.lat, d.lng); // 只儲存模糊化座標
+      const rec = {
+        uid: state.uid,
+        nickname: proxyOn && proxyName ? proxyName : (state.nickname || "朋友"),
+        lat: f.lat, lng: f.lng,
+        byAdmin: proxyOn,
+        ...base,
+      };
+      state.lastAddedId = await store.addRecord(rec);
+      $("celebrateOverlay").classList.remove("hidden");
+    }
+  } catch (e) {
+    console.error("save failed", e);
+    toast("儲存失敗，請再試一次");
+  }
+  btn.disabled = false;
+  btn.textContent = state.editingId ? "✅ 儲存修改" : "🎁 送出";
+}
+
+function flyToRecord(id) {
+  showView("map");
+  setTimeout(() => {
+    const m = state.markerById[id];
+    if (!m) return;
+    state.map.flyTo(m.getLatLng(), 15, { duration: 1.2 });
+    setTimeout(() => { try { state.cluster.zoomToShowLayer(m, () => m.openPopup()); } catch (e) {} }, 1400);
+  }, 200);
+}
+
+/* =====================================================================
+   我的紀錄
+   ===================================================================== */
+function renderMine() {
+  $("mineGreet").textContent = state.nickname ? "你好，" + state.nickname + "！" : "你好！";
+  const mine = myRecords();
+  $("mineCount").textContent = String(mine.length);
+  const list = $("mineList");
+  if (!mine.length) {
+    list.innerHTML = '<div class="empty-box"><div class="big-emoji">🌱</div><p>還沒有紀錄。<br>遇見好人好事，送出小禮物後，<br>按下面的「➕ 記錄好事」告訴大家吧！</p></div>';
+    return;
+  }
+  list.innerHTML = mine.map((r) => {
+    const tags = (r.tags || []).map((t) => '<span class="chip">' + esc(t) + "</span>").join("");
+    return (
+      '<div class="rec-card">' +
+      '<div class="rec-date">🗓️ ' + esc(fmtDate(r.happenedAt)) + (r.byAdmin ? ' <span class="chip">代錄：' + esc(r.nickname) + "</span>" : "") + "</div>" +
+      '<div class="rec-place">📍 ' + esc(r.place || "倫敦某處") + "</div>" +
+      (tags ? "<div>" + tags + "</div>" : "") +
+      (r.note ? '<div class="rec-note">' + esc(r.note) + "</div>" : "") +
+      '<div class="rec-actions">' +
+      '<button class="btn" data-act="zoom" data-id="' + r.id + '">🔍 放大</button>' +
+      '<button class="btn" data-act="edit" data-id="' + r.id + '">✏️ 修改</button>' +
+      '<button class="btn danger" data-act="del" data-id="' + r.id + '">🗑️ 刪除</button>' +
+      "</div></div>"
+    );
+  }).join("");
+}
+
+function openZoom(r) {
+  $("zoomDate").textContent = "🗓️ " + fmtDate(r.happenedAt);
+  $("zoomTags").innerHTML = (r.tags || []).map((t) => '<span class="chip">' + esc(t) + "</span>").join("");
+  $("zoomNote").textContent = r.note || "送出了一份小禮物 🎁";
+  $("zoomMeta").textContent = "📍 " + (r.place || "倫敦某處") + " · " + (r.nickname || "朋友");
+  $("zoomOverlay").classList.remove("hidden");
+}
+
+function startEdit(r) {
+  state.editingId = r.id;
+  state.draft = {
+    lat: r.lat, lng: r.lng, locChanged: false,
+    place: r.place || "", tags: (r.tags || []).slice(),
+    day: r.happenedAt === todayStr() ? "today" : r.happenedAt === todayStr(-1) ? "yesterday" : "pick",
+    date: r.happenedAt, note: r.note || "",
+  };
+  showView("add", true);
+  $("addTitle").textContent = "✏️ 修改紀錄";
+  $("btnSubmit").textContent = "✅ 儲存修改";
+  $("placeInput").value = state.draft.place;
+  locationChosen();
+  document.querySelectorAll(".seg-btn").forEach((b) => b.classList.toggle("active", b.dataset.day === state.draft.day));
+  const di = $("dateInput");
+  di.value = r.happenedAt;
+  di.max = todayStr();
+  di.classList.toggle("hidden", state.draft.day !== "pick");
+  document.querySelectorAll(".tag-btn").forEach((b) => b.classList.toggle("on", state.draft.tags.includes(b.dataset.tag)));
+  $("noteInput").value = state.draft.note;
+  $("noteCount").textContent = String(state.draft.note.length);
+  $("proxyName").value = "";
+  goStep(1);
+}
+
+/* =====================================================================
+   設定／管理員
+   ===================================================================== */
+function openSettings() {
+  $("nickEdit").value = state.nickname || "";
+  $("uidBox").textContent = state.uid || "－";
+  $("demoAdminSection").classList.toggle("hidden", !DEMO_MODE);
+  $("demoAdminToggle").checked = state.adminPreview;
+  $("adminSection").classList.toggle("hidden", !isAdminUI());
+  $("proxyToggle").checked = state.proxyMode;
+  $("settingsOverlay").classList.remove("hidden");
+}
+
+async function saveNickname() {
+  const nick = $("nickEdit").value.trim().slice(0, 20);
+  if (!nick) { toast("請輸入暱稱"); return; }
+  const old = state.nickname;
+  state.nickname = nick;
+  try {
+    await store.saveNickname(nick);
+    if (old && old !== nick) {
+      for (const r of myRecords()) {
+        if (!r.byAdmin) await store.updateRecord(r.id, { nickname: nick });
+      }
+    }
+    toast("✅ 已儲存暱稱");
+    renderMine();
+  } catch (e) { console.error(e); toast("儲存失敗，請再試一次"); }
+}
+
+function renderAdminList() {
+  const q = $("adminSearch").value.trim().toLowerCase();
+  const rows = state.records.filter((r) => {
+    if (!q) return true;
+    return ((r.nickname || "") + (r.place || "") + (r.note || "")).toLowerCase().includes(q);
+  });
+  $("adminList").innerHTML = rows.length ? rows.map((r) =>
+    '<div class="admin-row"><div class="meta"><b>' + esc(fmtDate(r.happenedAt)) + " · " + esc(r.nickname || "?") + "</b><br>" +
+    esc([r.place, r.note && (r.note.slice(0, 40) + (r.note.length > 40 ? "⋯" : ""))].filter(Boolean).join("：")) +
+    '</div><button class="btn danger" data-del="' + r.id + '">🗑️</button></div>'
+  ).join("") : '<p style="color:var(--muted)">沒有符合的紀錄</p>';
+}
+
+function exportCsv() {
+  const head = ["日期", "暱稱", "類別", "地點", "備註", "緯度(模糊)", "經度(模糊)", "代錄"];
+  const q = (s) => '"' + String(s ?? "").replace(/"/g, '""') + '"';
+  const rows = state.records.map((r) =>
+    [r.happenedAt, r.nickname, (r.tags || []).join("+"), r.place, r.note, r.lat, r.lng, r.byAdmin ? "是" : ""].map(q).join(",")
+  );
+  const csv = "\uFEFF" + head.map(q).join(",") + "\n" + rows.join("\n");
+  const blob = new Blob([csv], { type: "text/csv;charset=utf-8" });
+  const a = document.createElement("a");
+  a.href = URL.createObjectURL(blob);
+  a.download = "好人好事紀錄.csv";
+  a.click();
+  URL.revokeObjectURL(a.href);
+}
+
+/* =====================================================================
+   通用彈窗
+   ===================================================================== */
+function confirmDialog(msg) {
+  return new Promise((resolve) => {
+    $("confirmMsg").textContent = msg;
+    $("confirmOverlay").classList.remove("hidden");
+    const yes = $("confirmYes"), no = $("confirmNo");
+    const done = (v) => {
+      $("confirmOverlay").classList.add("hidden");
+      yes.onclick = no.onclick = null;
+      resolve(v);
+    };
+    yes.onclick = () => done(true);
+    no.onclick = () => done(false);
+  });
+}
+
+/* =====================================================================
+   啟動
+   ===================================================================== */
+function renderAll() {
+  updateCounter();
+  renderMarkers();
+  if (state.currentView === "mine") renderMine();
+  if (!$("adminOverlay").classList.contains("hidden")) renderAdminList();
+}
+
+function renderTagGrid() {
+  $("tagGrid").innerHTML = APP_CONFIG.tags.map((t) =>
+    '<button class="tag-btn" data-tag="' + esc(t) + '">' + esc(t) + "</button>"
+  ).join("");
+}
+
+function wireEvents() {
+  document.querySelectorAll("#tabbar .tab").forEach((t) => t.addEventListener("click", () => showView(t.dataset.view)));
+  $("btnSettings").addEventListener("click", openSettings);
+  $("btnReplay").addEventListener("click", replay);
+
+  /* 精靈 */
+  $("btnGeo").addEventListener("click", useGeolocation);
+  $("btnPickMap").addEventListener("click", openPicker);
+  $("btnRepick").addEventListener("click", () => {
+    $("pickedCard").classList.add("hidden");
+    $("btnGeo").classList.remove("hidden");
+    $("btnPickMap").classList.remove("hidden");
+    $("toStep2").disabled = true;
+  });
+  $("toStep2").addEventListener("click", () => goStep(2));
+  $("backTo1").addEventListener("click", () => goStep(1));
+  $("toStep3").addEventListener("click", () => goStep(3));
+  $("backTo2").addEventListener("click", () => goStep(2));
+  $("btnSubmit").addEventListener("click", submitRecord);
+
+  document.querySelectorAll(".seg-btn").forEach((b) => b.addEventListener("click", () => {
+    document.querySelectorAll(".seg-btn").forEach((x) => x.classList.toggle("active", x === b));
+    state.draft.day = b.dataset.day;
+    $("dateInput").classList.toggle("hidden", b.dataset.day !== "pick");
+  }));
+
+  $("tagGrid").addEventListener("click", (e) => {
+    const b = e.target.closest(".tag-btn");
+    if (!b) return;
+    b.classList.toggle("on");
+    const t = b.dataset.tag;
+    if (b.classList.contains("on")) { if (!state.draft.tags.includes(t)) state.draft.tags.push(t); }
+    else state.draft.tags = state.draft.tags.filter((x) => x !== t);
+  });
+
+  $("noteInput").addEventListener("input", () => { $("noteCount").textContent = String($("noteInput").value.length); });
+
+  /* 地圖選點 */
+  $("pickerClose").addEventListener("click", () => $("pickerOverlay").classList.add("hidden"));
+  $("pickerConfirm").addEventListener("click", confirmPicker);
+  $("searchInput").addEventListener("input", debounce((e) => searchPlace(e.target.value.trim()), 450));
+  $("searchResults").addEventListener("click", (e) => {
+    const b = e.target.closest(".search-item");
+    if (!b || !b.dataset.lat) return;
+    state.pickerMap.setView([+b.dataset.lat, +b.dataset.lon], 16);
+    if (!$("placeInput").value.trim()) $("placeInput").value = (b.dataset.name || "").slice(0, 60);
+    $("searchResults").classList.add("hidden");
+  });
+
+  /* 歡迎 */
+  const start = async () => {
+    const nick = $("nickInput").value.trim().slice(0, 20);
+    if (!nick) { toast("請先輸入稱呼"); return; }
+    state.nickname = nick;
+    try { await store.saveNickname(nick); } catch (e) { console.error(e); }
+    $("welcomeOverlay").classList.add("hidden");
+    toast("歡迎你，" + nick + "！");
+  };
+  $("btnStart").addEventListener("click", start);
+  $("nickInput").addEventListener("keydown", (e) => { if (e.key === "Enter") start(); });
+
+  /* 慶祝 */
+  $("celebrateMap").addEventListener("click", () => {
+    $("celebrateOverlay").classList.add("hidden");
+    flyToRecord(state.lastAddedId);
+  });
+  $("celebrateMore").addEventListener("click", () => {
+    $("celebrateOverlay").classList.add("hidden");
+    resetWizard();
+  });
+
+  /* 我的紀錄 */
+  $("mineList").addEventListener("click", async (e) => {
+    const b = e.target.closest("[data-act]");
+    if (!b) return;
+    const r = state.records.find((x) => x.id === b.dataset.id);
+    if (!r) return;
+    if (b.dataset.act === "zoom") openZoom(r);
+    if (b.dataset.act === "edit") startEdit(r);
+    if (b.dataset.act === "del") {
+      if (await confirmDialog("確定刪除這筆紀錄嗎？")) {
+        try { await store.deleteRecord(r.id); toast("已刪除"); renderMine(); }
+        catch (err) { console.error(err); toast("刪除失敗，請再試一次"); }
+      }
+    }
+  });
+  $("zoomClose").addEventListener("click", () => $("zoomOverlay").classList.add("hidden"));
+
+  /* 設定 */
+  $("settingsClose").addEventListener("click", () => $("settingsOverlay").classList.add("hidden"));
+  $("btnSaveNick").addEventListener("click", saveNickname);
+  $("btnCopyUid").addEventListener("click", async () => {
+    try { await navigator.clipboard.writeText(state.uid || ""); toast("✅ 已複製"); }
+    catch (e) { toast("請長按識別碼手動複製"); }
+  });
+  $("demoAdminToggle").addEventListener("change", (e) => {
+    state.adminPreview = e.target.checked;
+    $("adminSection").classList.toggle("hidden", !isAdminUI());
+    toast(state.adminPreview ? "已開啟管理員預覽" : "已關閉管理員預覽");
+  });
+  $("proxyToggle").addEventListener("change", (e) => {
+    state.proxyMode = e.target.checked;
+    toast(state.proxyMode ? "代錄模式：開" : "代錄模式：關");
+  });
+  $("btnAdminList").addEventListener("click", () => {
+    $("settingsOverlay").classList.add("hidden");
+    $("adminSearch").value = "";
+    renderAdminList();
+    $("adminOverlay").classList.remove("hidden");
+  });
+  $("btnExportCsv").addEventListener("click", exportCsv);
+
+  /* 管理列表 */
+  $("adminClose").addEventListener("click", () => $("adminOverlay").classList.add("hidden"));
+  $("adminSearch").addEventListener("input", debounce(renderAdminList, 250));
+  $("adminList").addEventListener("click", async (e) => {
+    const b = e.target.closest("[data-del]");
+    if (!b) return;
+    if (await confirmDialog("確定刪除這筆紀錄嗎？（管理員操作）")) {
+      try { await store.deleteRecord(b.dataset.del); toast("已刪除"); }
+      catch (err) { console.error(err); toast("刪除失敗"); }
+    }
+  });
+}
+
+function boot() {
+  if (typeof L === "undefined") {
+    showFatal("地圖元件載入失敗：請檢查網絡連接後重新整理頁面。");
+    return;
+  }
+  document.title = APP_CONFIG.title;
+  $("appTitle").textContent = APP_CONFIG.title;
+  $("appSub").textContent = APP_CONFIG.subtitle;
+  if (DEMO_MODE) $("demoBanner").classList.remove("hidden");
+  state.draft = newDraft();
+  initMap();
+  renderTagGrid();
+  wireEvents();
+  store.init({
+    onAuth(nick) {
+      $("splash").classList.add("hidden");
+      if (nick) {
+        state.nickname = nick;
+      } else {
+        $("welcomeOverlay").classList.remove("hidden");
+        setTimeout(() => $("nickInput").focus(), 300);
+      }
+    },
+    onRecords(list) {
+      state.records = list;
+      renderAll();
+    },
+  });
+  /* 若 15 秒後仍在載入（例如網絡問題），顯示提示 */
+  setTimeout(() => {
+    if (!$("splash").classList.contains("hidden")) {
+      showFatal("載入時間過長：請檢查網絡連接後重新整理頁面。");
+    }
+  }, 15000);
+}
+
+boot();
+
+</script>
+</body>
+</html>
