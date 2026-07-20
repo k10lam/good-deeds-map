@@ -4,7 +4,7 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
 <meta name="theme-color" content="#C25E3F">
-<title>好人好事地圖</title>
+<title>發現 • 鄰舍美好小事</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+TC:wght@400;500;700;900&display=swap" rel="stylesheet">
 <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.min.css">
@@ -308,7 +308,7 @@ h2{font-size:1.15rem;margin:6px 0 14px;font-weight:900}
     <div class="brand">
       <span class="brand-icon">🎁</span>
       <div>
-        <h1 id="appTitle">好人好事地圖</h1>
+        <h1 id="appTitle">發現 • 鄰舍美好小事</h1>
         <p id="appSub">觀察 · 欣賞 · 分享</p>
       </div>
     </div>
@@ -325,7 +325,7 @@ h2{font-size:1.15rem;margin:6px 0 14px;font-weight:900}
       <button id="btnReplay">▶ 重溫擴散</button>
     </section>
 
-    <!-- 記錄好事（三步精靈） -->
+    <!-- 記錄美好小事（三步精靈） -->
     <section id="view-add" class="view scroll hidden">
       <div class="wizard">
         <div class="steps">
@@ -337,7 +337,7 @@ h2{font-size:1.15rem;margin:6px 0 14px;font-weight:900}
         </div>
 
         <div id="addStep1" class="step-panel">
-          <h2 id="addTitle">📍 好事在哪裡發生？</h2>
+          <h2 id="addTitle">📍 美好小事在哪裡發生？</h2>
           <button id="btnGeo" class="btn big primary">📍 用我目前的位置</button>
           <button id="btnPickMap" class="btn big">🗺️ 在地圖上選位置</button>
           <div id="pickedCard" class="picked hidden">
@@ -360,7 +360,7 @@ h2{font-size:1.15rem;margin:6px 0 14px;font-weight:900}
             <button class="seg-btn" data-day="pick">選日期</button>
           </div>
           <input type="date" id="dateInput" class="hidden">
-          <h2 style="margin-top:22px">🏷️ 是哪一類好事？（可選多個）</h2>
+          <h2 style="margin-top:22px">🏷️ 是哪一類美好小事？（可選多個）</h2>
           <div id="tagGrid" class="tag-grid"></div>
           <div class="wiz-nav">
             <button id="backTo1" class="btn big ghost">⬅ 上一步</button>
@@ -370,10 +370,10 @@ h2{font-size:1.15rem;margin:6px 0 14px;font-weight:900}
 
         <div id="addStep3" class="step-panel hidden">
           <h2>✏️ 想補充幾句嗎？（可以留空）</h2>
-          <textarea id="noteInput" rows="4" maxlength="300" placeholder="例如：一位先生在巴士上讓座給帶著小孩的媽媽，我送了摺紙給他，聊了幾句，大家都很開心。（請不要寫對方的全名或聯絡方法）"></textarea>
+          <textarea id="noteInput" rows="4" maxlength="300" placeholder="例如：一位先生在巴士上讓座給帶著小孩的媽媽，我送了剪紙給他，聊了幾句，大家都很開心。（請不要寫對方的全名或聯絡方法）"></textarea>
           <div class="char-count"><span id="noteCount">0</span>/300</div>
           <div id="proxyWrap" class="hidden">
-            <label for="proxyName">👥 代錄：這件好事的記錄人是</label>
+            <label for="proxyName">👥 代錄：這件美好小事的記錄人是</label>
             <input type="text" id="proxyName" maxlength="20" placeholder="例如：陳伯">
           </div>
           <div id="summaryCard" class="summary"></div>
@@ -399,7 +399,7 @@ h2{font-size:1.15rem;margin:6px 0 14px;font-weight:900}
 
   <nav id="tabbar">
     <button class="tab active" data-view="map"><span class="tab-ico">🗺️</span><span>地圖</span></button>
-    <button class="tab tab-add" data-view="add"><span class="tab-ico">➕</span><span>記錄好事</span></button>
+    <button class="tab tab-add" data-view="add"><span class="tab-ico">➕</span><span>記錄美好小事</span></button>
     <button class="tab" data-view="mine"><span class="tab-ico">📖</span><span>我的紀錄</span></button>
   </nav>
 </div>
@@ -409,7 +409,7 @@ h2{font-size:1.15rem;margin:6px 0 14px;font-weight:900}
   <div class="card welcome-card">
     <div class="big-emoji">🎁</div>
     <h2>歡迎！</h2>
-    <p>這裡記錄大家在倫敦遇見的<b>好人好事</b>，以及送出摺紙小禮物的故事。小小的善意，可以一圈一圈擴散出去。</p>
+    <p>這裡記錄大家在倫敦發現的<b>鄰舍美好小事</b>，以及送出剪紙小禮物的故事。小小的善意，可以一圈一圈擴散出去。</p>
     <p><b>請問怎樣稱呼你？</b></p>
     <input type="text" id="nickInput" maxlength="20" placeholder="例如：陳伯、Mary">
     <button id="btnStart" class="btn big primary">開始 ➜</button>
@@ -429,7 +429,7 @@ h2{font-size:1.15rem;margin:6px 0 14px;font-weight:900}
     <div id="crosshair">📍</div>
   </div>
   <div class="picker-bottom">
-    <p>用手指移動地圖，讓大頭針指住好事發生的地方</p>
+    <p>用手指移動地圖，讓大頭針指住小事發生的地方</p>
     <button id="pickerConfirm" class="btn big primary">✓ 就是這裡</button>
   </div>
 </div>
@@ -439,7 +439,7 @@ h2{font-size:1.15rem;margin:6px 0 14px;font-weight:900}
   <div class="card celebrate-card">
     <div class="big-emoji">🎉</div>
     <h2>多謝分享！</h2>
-    <p>地圖上又多了一件好人好事。<br>小小善意，繼續擴散！</p>
+    <p>地圖上又多了一件鄰舍美好小事。<br>小小善意，繼續擴散！</p>
     <button id="celebrateMap" class="btn big primary">🗺️ 去地圖看看</button>
     <button id="celebrateMore" class="btn big">➕ 再記一件</button>
   </div>
@@ -527,7 +527,7 @@ h2{font-size:1.15rem;margin:6px 0 14px;font-weight:900}
    ① 應用程式設定 —— 教會可以自行修改這一段
    ===================================================================== */
 const APP_CONFIG = {
-  title: "好人好事地圖",            // 應用程式名稱（顯示在頂欄）
+  title: "發現 • 鄰舍美好小事",     // 應用程式名稱（顯示在頂欄）
   subtitle: "觀察 · 欣賞 · 分享",   // 副標題
   center: [51.5074, -0.1278],       // 地圖中心（倫敦）
   zoom: 11,
@@ -625,14 +625,14 @@ function isAdminUI() { return state.isAdmin || (DEMO_MODE && state.adminPreview)
    資料層 A：示範模式（內建例子，資料存在本機）
    ===================================================================== */
 const DEMO_SEED = [
-  { id: "d01", uid: "demo-user", nickname: "陳伯", lat: 51.5113, lng: -0.1310, place: "中國城 Gerrard Street", tags: ["😊 微笑・問候"], note: "茶樓裡一位年輕人主動幫幾位長者拼桌斟茶，我送了一隻紙鶴給他，他說會放在書桌上。", happenedAt: "2026-07-15", createdAt: "2026-07-15T10:00:00Z" },
+  { id: "d01", uid: "demo-user", nickname: "陳伯", lat: 51.5113, lng: -0.1310, place: "中國城 Gerrard Street", tags: ["😊 微笑・問候"], note: "茶樓裡一位年輕人主動幫幾位長者拼桌斟茶，我送了一幅小剪紙給他，他說會放在書桌上。", happenedAt: "2026-07-15", createdAt: "2026-07-15T10:00:00Z" },
   { id: "d02", uid: "u2", nickname: "梅姐", lat: 51.5390, lng: -0.1426, place: "Camden Town 地鐵站", tags: ["🪑 讓座"], note: "一位女士在 Northern Line 讓座給拿著拐杖的伯伯，還扶他坐好。", happenedAt: "2026-07-14", createdAt: "2026-07-14T09:00:00Z" },
   { id: "d03", uid: "u3", nickname: "David", lat: 51.4627, lng: -0.1145, place: "Brixton 市場", tags: ["💪 幫手提物"], note: "檔主幫一位婆婆把兩大袋菜搬到巴士站，全程有說有笑。", happenedAt: "2026-07-13", createdAt: "2026-07-13T15:00:00Z" },
   { id: "d04", uid: "u4", nickname: "王師奶", lat: 51.5416, lng: -0.0042, place: "Stratford 車站", tags: ["🧭 指路・解困"], note: "站務員很耐心地教一位不會用售票機的遊客買票，教完還畫了張小地圖。", happenedAt: "2026-07-12", createdAt: "2026-07-12T11:00:00Z" },
   { id: "d05", uid: "u5", nickname: "明哥", lat: 51.5560, lng: -0.2795, place: "Wembley 公園", tags: ["🎒 拾遺歸還"], note: "小朋友撿到銀包，馬上交給公園職員，職員廣播尋回失主。", happenedAt: "2026-07-10", createdAt: "2026-07-10T16:00:00Z" },
   { id: "d06", uid: "u6", nickname: "Grace", lat: 51.5150, lng: -0.3019, place: "Ealing Broadway", tags: ["🚪 開門・擋門"], note: "下大雨，一位先生站在店門口幫每位推嬰兒車的家長擋門。", happenedAt: "2026-07-08", createdAt: "2026-07-08T14:00:00Z" },
   { id: "d07", uid: "u7", nickname: "蘇太", lat: 51.3762, lng: -0.0982, place: "Croydon 圖書館", tags: ["💛 其他"], note: "圖書館職員替長者逐個字放大列印通知，又教他們用老花鏡看目錄。", happenedAt: "2026-07-06", createdAt: "2026-07-06T10:30:00Z" },
-  { id: "d08", uid: "u8", nickname: "強叔", lat: 51.5054, lng: -0.0235, place: "Canary Wharf 碼頭", tags: ["😊 微笑・問候"], note: "晨運時一位跑步的小姐每天都跟我們揮手問早，今天終於送了摺紙給她。", happenedAt: "2026-07-04", createdAt: "2026-07-04T08:00:00Z" },
+  { id: "d08", uid: "u8", nickname: "強叔", lat: 51.5054, lng: -0.0235, place: "Canary Wharf 碼頭", tags: ["😊 微笑・問候"], note: "晨運時一位跑步的小姐每天都跟我們揮手問早，今天終於送了剪紙給她。", happenedAt: "2026-07-04", createdAt: "2026-07-04T08:00:00Z" },
   { id: "d09", uid: "u9", nickname: "阿玲", lat: 51.5724, lng: -0.1941, place: "Golders Green 巴士站", tags: ["🪑 讓座", "😊 微笑・問候"], note: "13 號巴士上一位學生讓座給孕婦，下車時還說 have a nice day。", happenedAt: "2026-07-01", createdAt: "2026-07-01T17:00:00Z" },
   { id: "d10", uid: "u10", nickname: "小恩", lat: 51.4123, lng: -0.3007, place: "Kingston 河邊", tags: ["💪 幫手提物"], note: "一位叔叔幫推輪椅的家庭把輪椅抬上斜坡，說自己順路。", happenedAt: "2026-06-28", createdAt: "2026-06-28T13:00:00Z" },
   { id: "d11", uid: "u11", nickname: "Peter", lat: 51.5830, lng: -0.0190, place: "Walthamstow 街市", tags: ["🎒 拾遺歸還"], note: "菜檔阿姐追了半條街，把顧客漏低的手套還給人家。", happenedAt: "2026-06-25", createdAt: "2026-06-25T12:00:00Z" },
@@ -855,7 +855,7 @@ function newDraft() {
 function resetWizard() {
   state.editingId = null;
   state.draft = newDraft();
-  $("addTitle").textContent = "📍 好事在哪裡發生？";
+  $("addTitle").textContent = "📍 美好小事在哪裡發生？";
   $("btnSubmit").textContent = "🎁 送出";
   $("pickedCard").classList.add("hidden");
   $("btnGeo").classList.remove("hidden");
@@ -1067,7 +1067,7 @@ function renderMine() {
   $("mineCount").textContent = String(mine.length);
   const list = $("mineList");
   if (!mine.length) {
-    list.innerHTML = '<div class="empty-box"><div class="big-emoji">🌱</div><p>還沒有紀錄。<br>遇見好人好事，送出小禮物後，<br>按下面的「➕ 記錄好事」告訴大家吧！</p></div>';
+    list.innerHTML = '<div class="empty-box"><div class="big-emoji">🌱</div><p>還沒有紀錄。<br>發現鄰舍美好小事，送出小禮物後，<br>按下面的「➕ 記錄美好小事」告訴大家吧！</p></div>';
     return;
   }
   list.innerHTML = mine.map((r) => {
@@ -1173,7 +1173,7 @@ function exportCsv() {
   const blob = new Blob([csv], { type: "text/csv;charset=utf-8" });
   const a = document.createElement("a");
   a.href = URL.createObjectURL(blob);
-  a.download = "好人好事紀錄.csv";
+  a.download = "鄰舍美好小事紀錄.csv";
   a.click();
   URL.revokeObjectURL(a.href);
 }
